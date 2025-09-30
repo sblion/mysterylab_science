@@ -179,9 +179,6 @@
 
     console.log("zombie count :", zombiecount);
     window.onload = function () {
-        var oneHour = 60 * 30,
-            display = document.querySelector('#time');
-        startStopwatch(oneHour, display);
         updateLives();
 
         const schoolName = localStorage.getItem('a');
@@ -542,23 +539,6 @@
         window.open(url, 'popup', `width=${popupWidth},height=${popupHeight},top=${top},left=${left}`);
     }
 
-    function startStopwatch(duration, display) {
-        var timer = duration, minutes, seconds;
-        setInterval(function () {
-            minutes = parseInt(timer / 60, 10);
-            seconds = parseInt(timer % 60, 10);
-
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
-
-            display.textContent = minutes + ":" + seconds;
-
-            if (timer < 0) {
-                display.textContent = "시간이 종료됐습니다.";
-                clearInterval(this);
-            }
-        }, 1000);
-    }
 
     function sleep(ms) {
         const wakeUpTime = Date.now() + ms;
