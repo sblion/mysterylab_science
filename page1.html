@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mistery Lab Season.1</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap');
+
+        * {
+            font-family: "Gowun Dodum", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        body {
+            background-color: black;
+        }
+
+        .image {
+            background-image: url('미스터리랩2.jpg');
+            background-position: center center;
+            background-size: 60%;
+            background-repeat: no-repeat;
+            height: 450px;
+        }
+
+        .main {
+            color: white;
+        }
+
+        .play,
+        .hint {
+            color: white;
+            width: 500px;
+            margin: 20px auto 20px auto;
+            border: 1px solid white;
+            padding: 20px;
+            display: none;
+        }
+
+        .container {
+            color: white;
+        }
+
+
+        .stopwatch-container {
+            padding-bottom: 100px;
+            left: 50%;
+            transform: translateX(0%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 10px solid #fff;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .circle .time {
+            font-size: 2em;
+            color: #fff;
+        }
+
+        .circle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 10px solid rgb(255, 0, 0);
+            animation: countdown 3600s linear forwards;
+        }
+
+        @keyframes countdown {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .content {
+            padding-bottom: 300px;
+            /* 스톱워치 높이 + 여유 공간 */
+        }
+
+        .lives {
+            margin-left: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .lives i {
+            color: red;
+            font-size: 1.5em;
+            margin-right: 5px;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            margin: 0 auto;
+            display: none;
+            /* Initially hidden */
+        }
+
+        #game-image {
+            width: 100%;
+            height: 100%;
+        }
+
+        .click-area {
+            position: absolute;
+            background-color: rgba(255, 0, 0, 0.5);
+            /* Transparent red for visibility */
+            border: 2px solid red;
+            cursor: pointer;
+        }
+
+        #popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #popup input {
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        #popup button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<script>
+    let zombiecount = 2;
+    let zombie1 = 0;
+    let zombie2 = 0;
+    let zombie3 = 0;
+
+    console.log("zombie count :", zombiecount);
+    window.onload = function () {
+        updateLives();
+
+        const schoolName = localStorage.getItem('a');
+        const studentID = localStorage.getItem('b');
+        const studentName = localStorage.getItem('c');
+
+        console.log("Saving to localStorage:", schoolName, studentID, studentName);
+        // HTML에 데이터 출력
+        document.getElementById("schoolName").innerText = schoolName;
+        document.getElementById("studentID").innerText = studentID;
+        document.getElementById("studentName").innerText = studentName;
+
+        addItem(0, 0, 'HeLi영상.png', 'https://www.youtube.com/embed/HQnY9-cA2A4?si=5O7lW9uNyXGjx7SA&autoplay=1'); // 이미지, 확대용
+    };
+    // 페이지 로드 시 데이터 불러오기
+
+
+    function updateLives() {
+        const livesContainer = $('#lives');
+        livesContainer.empty();
+        for (let i = 0; i < lives; i++) {
+            livesContainer.append('<i class="bi bi-heart-fill"></i>');
+        }
+        if (lives === 0) {
+            alert('Game Over');
+            // window.location.href = 'page2.html';
+        }
+
+    }
+
+    function updateMedicine(zombiecount) {
+        const medicineContainer = document.getElementById("medicine-container");
+        medicineContainer.innerHTML = ""; // 기존 아이콘 초기화
+        for (let i = 0; i < zombiecount; i++) {
+            const capsuleIcon = document.createElement("i");
+            capsuleIcon.className = "bi bi-capsule px-2 text-white";
+            medicineContainer.appendChild(capsuleIcon);
+        }
+    }
+
+
+    function openclose(section) {
+        $('.play, .hint').hide();
+        $('#' + section).toggle();
+    }
+
+    function displayHint() {
+        const hintInput = $('#hint_input').val();
+        let hintText = '';
+
+        switch (hintInput) {
+            case 'Ar':
+            case 'Kr':
+            case 'Xe':
+                hintText = "창문을 깨고 싶다면 Mg 카드와 조합해보자.";
+                break;
+            case 'Mg':
+                hintText = "Ar, Kr, Xe 카드와 각각 조합하면 각 창문을 깰 수 있다.";
+                break;
+            case 'Al':
+                hintText = "Si 카드와 조합해보자.";
+                break;
+            case 'Si':
+                hintText = "Al 카드와 조합해보자.";
+                break;
+            case 'P':
+                hintText = "영양소 큐브 원소기호 카드(Ga, Ge, As)를 뒤집어보자.";
+                break;
+            case 'Ga':
+            case 'Ge':
+            case 'As':
+                hintText = "Cl 카드에 있는 지시약 원소기호 카드(In, Sn, Sb)와 각각 조합해보자.";
+                break;
+            case 'Cl':
+                hintText = "지시약 원소기호 카드(In, Sn, Sb)를 뒤집어보자.";
+                break;
+            case 'In':
+            case 'Sn':
+            case 'Sb':
+                hintText = "P 카드에 있는 영양소 큐브 원소기호 카드(Ga, Ge, As)와 각각 조합해보자.";
+                break;
+            case 'Nb':
+            case 'Zr':
+            case 'Y':
+                hintText = "K 카드에 있는 소화액 원소기호 카드(Tl, Pb, Bi, Po)와 각각 조합해보자.";
+                break;
+            case 'Tl':
+            case 'Pb':
+            case 'Bi':
+            case 'Po':
+                hintText = "이름을 아는 영양소 큐브 원소기호 카드(Nb, Zr, Y)와 각각 조합해보자.";
+                break;
+            case 'Sc':
+            case 'Ti':
+            case 'V':
+                hintText = "카드 내용을 참고해 각 종류의 좀비를 퇴치하자.";
+                break;
+            case 'Ca':
+                hintText = "Sr 카드와 조합해보자.";
+                break;
+            case 'Sr':
+                hintText = "Ca 카드와 조합해보자.";
+                break;
+            case 'Rb':
+                hintText = "내용을 확인했으면 버려도 좋다.";
+                break;
+            default:
+                hintText = "해당하는 원소의 힌트가 없습니다.";
+        }
+        $('#hint_output').html(hintText);
+    }
+
+    function displayPlay() {
+        const playInput = $('#play_input').val();
+        let playOutput = '';
+        let answer = 0;
+
+
+
+        switch (playInput) {
+            case 'MgXe':
+                playOutput = `
+                <p>영상을 다 본 후 '1층 과학실' 공간 카드를 뒤집으세요. 학교 정문 공간 카드와 원소기호 카드는 버리세요.</p>
+                <div id="videoModal" style="
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    width: 80vw; height: 80vh; background: black; z-index: 9999;
+                    display: flex; align-items: center; justify-content: center; border-radius: 10px;">
+                    
+                    <!-- 닫기 버튼 -->
+                    <button onclick="closeVideo()" style="
+                        position: absolute; top: 10px; right: 10px; 
+                        background: red; color: white; border: none; padding: 8px 12px; 
+                        font-size: 16px; cursor: pointer; border-radius: 5px;">✖</button>
+
+                    <!-- 유튜브 영상 -->
+                    <iframe width="100%" height="100%" src="https://www.youtube.com/embed/B2eys6_Jtpk?si=AXEb6yxveFKTk1wY" 
+                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen></iframe>
+                </div>
+            `;
+                addItem(0, 1, '과학실입장.png', 'https://www.youtube.com/embed/HQnY9-cA2A4?si=5O7lW9uNyXGjx7SA&autoplay=1'); // 이미지, 확대용
+                addItem(0, 2, '미션1.png', '미션1.png'); // 이미지, 확대용  
+                break;
+            case 'MgAr':
+            case 'MgKr':
+                playOutput = "<p><p>좀비가 나타났습니다.</p><img src='좀비.png' style='width: 100%; height: auto;'>";
+                alert('좀비가 나타났습니다. 생명이 1개 깎입니다.');
+                lives--;
+                updateLives();
+                break;
+            case 'AlSi':
+                playOutput = `<p>좀비 관찰기록이 아이템 창에 추가되었습니다. Al(13), Si(14) 카드를 버리세요. 
+        <div id="record-container" style="position: relative; text-align: center;">
+            <img id="record-image" src="좀비관찰기록1.png" style="width: 100%; height: auto;">
+            <button onclick="nextRecordImage()" style="
+                position: absolute; top: 50%; right: 10px;
+                transform: translateY(-50%);
+                background: rgba(0,0,0,0.5); color: white;
+                border: none; padding: 10px 15px;
+                font-size: 24px; cursor: pointer;">▶</button>
+        </div>
+    `;
+                addItem(1, 0, '좀비관찰기록1.png', '좀비관찰기록1.png'); // 이미지, 확대용
+                addItem(1, 1, '좀비관찰기록2.png', '좀비관찰기록2.png'); // 이미지, 확대용
+                addItem(1, 2, '좀비관찰기록3.png', '좀비관찰기록3.png'); // 이미지, 확대용
+                break;
+            case 'ArMg':
+            case 'KrMg':
+            case 'XeMg':
+            case 'TlY':
+            case 'PbY':
+            case 'TlZr':
+            case 'TlNb':
+            case 'PbZr':
+            case 'PbNb':
+            case 'BiY':
+            case 'BiZr':
+            case 'BiNb':
+            case 'PoY':
+            case 'PoZr':
+            case 'PoNb':
+            case 'InGa':
+            case 'InGe':
+            case 'InAs':
+            case 'SnGa':
+            case 'SnGe':
+            case 'SnAs':
+            case 'SbGa':
+            case 'SbGe':
+            case 'SbAs':
+                playOutput = "<p>원자번호 순서대로 넣어보자.<p>";
+                break;
+            case 'YTl':
+            case 'YPb':
+            case 'ZrTl':
+            case 'ZrBi':
+            case 'ZrPo':
+            case 'NbPb':
+            case 'NbPo':
+                playOutput = "<p>아무런 변화도 일어나지 않았다. 다른 지시약을 사용해보자.</p>";
+                break;
+            case 'GaSb':
+                playOutput = "<p>Ga(31), Sb(51) 카드를 버리고, Y(39) 카드를 뒤집으세요.<p><p> 큐브 3종류의 정체 카드를 모두 찾았으면 이 큐브 카드들의 원소기호를 원자 번호 순으로 배열해 숨겨진 원소기호를 찾아보세요.</p><img src='GaSb.png' style='width: 100%; height: auto;'>";
+                break;
+            case 'GeSn':
+                playOutput = "<p>Ge(32)와 Sn(50)카드를 버리고, Zr(40) 카드를 뒤집으세요. <p><p> 큐브 3종류의 정체 카드를 모두 찾았으면 이 큐브 카드들의 원소기호를 원자 번호 순으로 배열해 숨겨진 원소기호를 찾아보세요.</p><img src='GeSn.png' style='width: 100%; height: auto;'>";
+                break;
+            case 'AsIn':
+                playOutput = "<p>As(33)와 In(49)카드를 버리고, Nb(41) 카드를 뒤집으세요. <p><p> 큐브 3종류의 정체 카드를 모두 찾았으면 이 큐브 카드들의 원소기호를 원자 번호 순으로 배열해 숨겨진 원소기호를 찾아보세요.</p><img src='AsIn.png' style='width: 100%; height: auto;'>";
+                break;
+            case 'NbTl':
+            case 'NbBi':
+                zombie1 = 1;
+                zombiecount = zombie1 + zombie2 + zombie3;
+                console.log(zombiecount);
+                updateMedicine(zombiecount);
+                playOutput = "<p>Sc(21) 카드를 뒤집으세요.</p><img src='밥.png' style='width: 100%; height: auto;'>";
+                handleZombieCount();
+                break;
+            case 'ZrPb':
+                zombie2 = 1;
+                zombiecount = zombie1 + zombie2 + zombie3;
+                console.log(zombiecount);
+                updateMedicine(zombiecount);
+                playOutput = "<p>Ti(22) 카드를 뒤집으세요.</p><img src='닭.png' style='width: 100%; height: auto;'>";
+                handleZombieCount();
+                break;
+            case 'YBi':
+                playOutput = "<p>고체지방의 소화를 돕는 소화액을 찾아보세요.</p><img src='느린지방.png' style='width: 100%; height: auto;'>";
+                break;
+            case 'YPo':
+                playOutput = "<p>고체지방을 소화시킬 수 있는 소화액을 찾아보세요.</p><img src='느린지방2.png' style='width: 100%; height: auto;'>";
+                break;
+            case 'YBiPo':
+                zombie3 = 1;
+                zombiecount = zombie1 + zombie2 + zombie3;
+                console.log(zombiecount);
+                updateMedicine(zombiecount);
+                playOutput = "<p>V(23) 카드를 뒤집으세요.</p><img src='지방.png' style='width: 100%; height: auto;'>";
+                handleZombieCount();
+                break;
+            case 'CaSr':
+                playOutput = `
+            <p>미니게임이 시작되었습니다.</p> <p>좀순이의 실험계획서에서 '틀린 부분을 클릭'하여 올바르게 고치세요. 모든 단어는 붙여서 쓰세요.</p>
+            <div id="game-container" style="position: relative; display: inline-block; max-width: 100%; height: auto;">
+                <img id="game-image" src="실험계획서(전).jpeg" alt="실험계획서" style="width: 100%; max-width: 400px; height: auto; display: block; margin: 0 auto;">
+                <!-- 클릭 영역 1 -->
+                <div class="click-area" data-answer="기관계" style="
+                    position: absolute; top: 80px; left: 180px;
+                    width: 80px; height: 50px;
+                    background-color: rgba(255, 0, 0, 0.3); border: none; cursor: pointer;"></div>
+                <!-- 클릭 영역 2 -->
+                <div class="click-area" data-answer="엿당" style="
+                    position: absolute; top: 196px; left: 325px;
+                    width: 70px; height: 35px;
+                    background-color: rgba(255, 0, 0, 0.3); border: none; cursor: pointer;"></div>
+                <!-- 클릭 영역 3 -->
+                <div class="click-area" data-answer="펩신" style="
+                    position: absolute; top: 235px; left: 137px;
+                    width: 70px; height: 35px;
+                    background-color: rgba(255, 0, 0, 0.3); border: none; cursor: pointer;"></div>
+                <!-- 클릭 영역 4 -->
+                <div class="click-area" data-answer="작은단백질" style="
+                    position: absolute; top: 233px; left: 327px;
+                    width: 85px; height: 35px;
+                    background-color: rgba(255, 0, 0, 0.3); border: none; cursor: pointer;"></div>
+                <!-- 클릭 영역 5 -->
+                <div class="click-area" data-answer="모노글리세리드" style="
+                    position: absolute; top: 315px; left: 315px;
+                    width: 90px; height: 35px;
+                    background-color: rgba(255, 0, 0, 0.3); border: none; cursor: pointer;"></div>
+            </div>
+        `;
+                break;
+            case 'THEEND':
+                alert("좀순이를 도와 소나중학교의 좀비사태를 해결했습니다! '확인'을 누르면 결과페이지로 이동합니다.");
+                console.log("School Name:", localStorage.getItem('a'));
+                console.log("Student ID:", localStorage.getItem('b'));
+                console.log("Student Name:", localStorage.getItem('c'));
+                window.location.href = 'page2.html'; // page1.html로 이동
+                break;
+
+            default:
+                playOutput = "<br><p>잘못된 단어입니다. 대소문자를 구분해주세요.</p>";
+        }
+
+        $('#play_output').html(playOutput);
+
+
+        // 클릭 이벤트 연결
+        $('.click-area').on('click', function () {
+            const correctAnswer = $(this).data('answer'); // 정답 가져오기
+            const userAnswer = prompt(`실험계획서를 올바르게 고치시오.`); // 입력창 띄우기
+
+            if (userAnswer === correctAnswer) { // 정답 확인
+                alert('정답입니다!');
+                $(this).css('background-color', 'rgba(0, 255, 0, 0.3)'); // 선택 영역 색 변경 (초록색)
+                $(this).css('pointer-events', 'none'); // 더 이상 클릭 불가
+                answer++; // answer 증가
+                console.log('Current Answer Count:', answer); // 디버깅용
+
+                if (answer === 5) { // 모든 정답을 맞혔을 때
+                    alert('실험계획서 고치기 성공!');
+                    $('#game-image').attr('src', '실험계획서(후).jpeg'); // 이미지 변경
+                    $('.click-area').remove();
+                    $('body').append(`
+                <div id="videoModal" style="
+                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    width: 80vw; height: 80vh; background: black; z-index: 9999;
+                    display: flex; align-items: center; justify-content: center; border-radius: 10px;">
+                    
+                    <!-- 닫기 버튼 -->
+                    <button onclick="closeVideo()" style="
+                        position: absolute; top: 10px; right: 10px; 
+                        background: red; color: white; border: none; padding: 8px 12px; 
+                        font-size: 16px; cursor: pointer; border-radius: 5px;">✖</button>
+
+                    <!-- 유튜브 영상 -->
+                    <iframe width="100%" height="100%" src="https://www.youtube.com/embed/xJnTFXYJqZI?si=ecshNo0X5aQcYWdW" 
+                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen></iframe>
+                </div>
+            `);
+
+                    addItem(2, 2, '에필로그.png', 'https://www.youtube.com/embed/xJnTFXYJqZI?si=ecshNo0X5aQcYWdW&autoplay=1'); // 이미지, 확대용
+
+                }
+            } else {
+                alert('오답입니다. 다시 시도해주세요.');
+            }
+        });
+    }
+
+
+
+
+    $(document).ready(function () {
+        // When the clickable area is clicked
+        $('#click-target').on('click', function () {
+            $('#popup').show(); // Show the input popup
+        });
+
+        // When the answer is submitted
+        $('#submit-answer').on('click', function () {
+            const answer = $('#answer-input').val().trim();
+            if (answer === 'CorrectAnswer') { // Replace 'CorrectAnswer' with the actual answer
+                alert('정답입니다!');
+                $('#game-image').attr('src', 'image2.jpg'); // Change to the second image
+                $('#popup').hide(); // Hide the popup
+            } else {
+                alert('틀렸습니다. 다시 시도하세요.');
+            }
+        });
+    });
+
+    function openPopup(url) {
+        const popupWidth = 560;
+        const popupHeight = 315;
+        const left = (screen.width - popupWidth) / 2;
+        const top = (screen.height - popupHeight) / 2;
+
+        window.open(url, 'popup', `width=${popupWidth},height=${popupHeight},top=${top},left=${left}`);
+    }
+
+
+    function sleep(ms) {
+        const wakeUpTime = Date.now() + ms;
+        while (Date.now() < wakeUpTime) { }
+    }
+
+    function handleZombieCount() {
+        if (zombiecount === 3) {
+            sleep(1000);
+            // 안내 모달을 먼저 표시
+            $('#infoModal').modal('show');
+
+            // 확인 버튼 클릭 시 좀비 모달 표시
+            document.getElementById("confirmButton").onclick = function () {
+                $('#infoModal').modal('hide'); // 안내 모달 닫기
+                showZombieModal(); // 첫 번째 좀비 모달 띄우기
+            };
+        }
+    }
+
+    let lastZombie = null; // 이전 좀비 저장용 변수
+    let success = 0;
+    let lives = 5;
+
+    // 정답 리스트를 전역에 선언
+    const correctAnswers = {
+        '입좀비': ['침', '이자액+쓸개즙'],
+        '위좀비': ['위액'],
+        '소장좀비': ['이자액+쓸개즙']
+    };
+
+
+    function showZombieModal() {
+        if (success >= 5) {
+            alert('좀순이에게 도착했습니다.');
+            $('body').append(`
+            <div id="videoModal" style="
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                width: 80vw; height: 80vh; background: black; z-index: 9999;
+                display: flex; align-items: center; justify-content: center; border-radius: 10px;">
+                
+                <button onclick="closeVideo()" style="
+                    position: absolute; top: 10px; right: 10px; 
+                    background: red; color: white; border: none; padding: 8px 12px; 
+                    font-size: 16px; cursor: pointer; border-radius: 5px;">✖</button>
+
+                <iframe width="100%" height="100%" src="https://youtu.be/s7WhdS6_r7c" 
+                    frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen></iframe>
+            </div>
+        `);
+            return;
+        }
+
+
+
+        const zombies = ['입좀비', '위좀비', '소장좀비'];
+
+        // lastZombie와 다른 좀비만 남기고 후보군 구성
+        const filteredZombies = zombies.filter(z => z !== lastZombie);
+
+        // 랜덤으로 좀비 선택
+        const selectedZombie = filteredZombies[Math.floor(Math.random() * filteredZombies.length)];
+
+        // 이번에 나온 좀비를 lastZombie에 저장
+        lastZombie = selectedZombie;
+        console.log("lastZombie is :", lastZombie);
+        // HTML에 데이터 출력
+        // 좀비에 맞는 이미지 경로 설정
+        let zombieImage = '';
+        if (selectedZombie === '입좀비') {
+            zombieImage = '입좀비.png';
+        } else if (selectedZombie === '위좀비') {
+            zombieImage = '위좀비.png';
+        } else if (selectedZombie === '소장좀비') {
+            zombieImage = '소장좀비.png';
+        }
+
+        // 모달 창의 내용을 업데이트
+        $('#zombieModal .modal-title').text(`${selectedZombie}가 나타났습니다!`);
+        $('#zombieModal .modal-body').html(`
+        <p>${selectedZombie}가 나타났습니다. 소화제를 선택하세요:</p>
+        <img src="${zombieImage}" alt="${selectedZombie}" style="width:100%; height:auto; margin-bottom:10px;">
+        <button id="med1" class="btn btn-outline-danger">침</button>
+        <button id="med2" class="btn btn-outline-danger">위액</button>
+        <button id="med3" class="btn btn-outline-danger">이자액+쓸개즙</button>
+    `);
+
+
+        // 모달 설정 (외부 클릭 및 ESC 방지)
+        $('#zombieModal').modal({
+            backdrop: 'static', // 외부 클릭 방지
+            keyboard: false // ESC 키 방지
+        });
+
+        // 모달 창을 보여줌
+        $('#zombieModal').modal('show');
+
+        // 버튼 클릭 이벤트 등록 (선택한 약과 함께 좀비 정보 넘김)
+        $('#med1').off('click').on('click', function () {
+            processSelection(selectedZombie, '침');
+        });
+        $('#med2').off('click').on('click', function () {
+            processSelection(selectedZombie, '위액');
+        });
+        $('#med3').off('click').on('click', function () {
+            processSelection(selectedZombie, '이자액+쓸개즙');
+        });
+    }
+
+    function processSelection(zombie, selectedMed) {
+        const correctMedList = correctAnswers[zombie];
+
+        console.log("좀비:", zombie);
+        console.log("선택한 약:", selectedMed);
+        console.log("정답 리스트:", correctMedList);
+
+        if (correctMedList && correctMedList.includes(selectedMed)) {
+            alert(`${selectedMed}을 선택했습니다. 생명이 깎이지 않습니다.\n\n잡아야 하는 좀비 수: ${success + 1}/5`);
+            success++;
+        } else {
+            lives--;
+            alert(`잘못된 약을 선택했습니다. 생명이 1개 깎입니다.\n\n 남은 생명 : ${lives}`);
+            updateLives();
+        }
+
+        $('#zombieModal').modal('hide');
+
+        if (lives === 0) {
+            // Game Over 후 다시 도전 여부를 묻는 alert
+            const restart = confirm('Game Over. 다시 도전하시겠습니까?');
+
+            if (restart) {
+                // 다시 도전할 경우 lives와 success 초기화
+                lives = 5;
+                success = 0;
+
+                // lives와 success 업데이트
+                updateLives();  // lives 업데이트 함수 호출 (여기서는 초기화된 값으로 업데이트)
+
+                // 좀비 모달 띄우기
+                showZombieModal();
+            }
+        } else if (success < 5) {
+            setTimeout(showZombieModal, 500);
+        } else {
+            alert('좀순이에게 도착했습니다.');
+            $('body').append(`
+            <div id="videoModal" style="
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                width: 80vw; height: 80vh; background: black; z-index: 9999;
+                display: flex; align-items: center; justify-content: center; border-radius: 10px;">
+                
+                <button onclick="closeVideo()" style="
+                    position: absolute; top: 10px; right: 10px; 
+                    background: red; color: white; border: none; padding: 8px 12px; 
+                    font-size: 16px; cursor: pointer; border-radius: 5px;">✖</button>
+
+                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/gxiPZXXRw04?si=R25BLvv0CBel9vBa" 
+                    frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen></iframe>
+            </div>
+        `);
+            addItem(2, 0, '좀순과의대화.png', 'https://www.youtube.com/embed/gxiPZXXRw04?si=R25BLvv0CBel9vBa&autoplay=1'); // 이미지, 확대용
+            addItem(2, 1, '미션2.png', '미션2.png'); // 이미지, 확대용
+        }
+    }
+
+
+    /*function startZombieCheck() {
+        setInterval(function () {
+           
+        }, 1000);
+    }
+ 
+    $(document).ready(function () {
+        startZombieCheck();
+    }); */
+
+    function toggleItemBox() {
+        const box = document.getElementById("itemBox");
+        box.style.display = box.style.display === "none" ? "block" : "none";
+    }
+
+    function addItem(row, col, imageUrl, fullUrl = null) {
+        const cell = document.getElementById(`item-${row}-${col}`);
+        if (!cell) return;
+        // 썸네일 이미지 렌더
+        cell.innerHTML = `
+    <img id="item-thumb-${row}-${col}"
+         src="${imageUrl}"
+         alt="아이템"
+         style="width:100%; height:100%; object-fit:contain; cursor:pointer;"/>
+  `;
+
+        // 클릭 핸들러 바인딩 (이미지에 직접)
+        const thumb = document.getElementById(`item-thumb-${row}-${col}`);
+        thumb.onclick = null; // 혹시 모를 중복 제거
+
+        // fullUrl 유무에 따라 동작
+        if (fullUrl && /youtube\.com\/embed|youtu\.be/i.test(fullUrl)) {
+            thumb.addEventListener('click', () => showVideo(fullUrl));
+        } else if (fullUrl) {
+            thumb.addEventListener('click', () => showPopupImage(fullUrl));
+        } else {
+            // fullUrl이 없으면 썸네일 자체를 확대 보기로
+            thumb.addEventListener('click', () => showPopupImage(imageUrl));
+        }
+    }
+
+    function showPopupImage(imageUrl) {
+        // 기존 팝업이 있으면 제거
+        const old = document.getElementById('imagePopup');
+        if (old) old.remove();
+
+        // 스크롤 잠금
+        document.body.style.overflow = 'hidden';
+
+        // 팝업 생성
+        const popup = document.createElement('div');
+        popup.id = 'imagePopup';
+        popup.style = `
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      width:80vw; height:80vh; background:rgba(0,0,0,.9); z-index:99998;
+      display:flex; align-items:center; justify-content:center; border-radius:10px;
+    `;
+        popup.innerHTML = `
+      <!-- 닫기 버튼: 오른쪽 위 -->
+      <button class="close-btn" id="imagePopupCloseBtn" style="
+        position:absolute; top:12px; right:12px;
+        background:#ff4d4f; color:#fff; border:none; border-radius:6px;
+        padding:8px 12px; font-size:16px; cursor:pointer; line-height:1;
+      ">✖</button>
+
+      <!-- 이미지 -->
+      <img src="${imageUrl}" alt="확대" style="
+        max-width:100%; max-height:100%; border-radius:10px;
+        box-shadow:0 4px 16px rgba(0,0,0,.35);
+      ">
+    `;
+
+        document.body.appendChild(popup);
+
+        // 닫기 동작
+        document.getElementById('imagePopupCloseBtn').onclick = () => {
+            const el = document.getElementById('imagePopup');
+            if (el) el.remove();
+            document.body.style.overflow = ''; // 스크롤 잠금 해제
+        };
+    }
+
+    function showVideo(embedUrl) {
+        // 기존 모달 제거
+        const old = document.getElementById('videoOverlay');
+        if (old) old.remove();
+
+        // 전체 화면 오버레이
+        const overlay = document.createElement('div');
+        overlay.id = 'videoOverlay';
+        overlay.style = `
+      position: fixed; inset: 0;           /* top:0; right:0; bottom:0; left:0; */
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100000;
+    `;
+
+        // 내부 박스: 화면의 80% 크기
+        const box = document.createElement('div');
+        box.style = `
+      position: relative;
+      width: 80vw; max-width: 1280px;
+      height: 80vh; max-height: 90vh;
+      background: #000; border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+      overflow: hidden;
+    `;
+
+        // 닫기 버튼 (오른쪽 위)
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✖';
+        closeBtn.onclick = closeVideo;
+        closeBtn.style = `
+      position: absolute; top: 10px; right: 10px;
+      background: #e03131; color: #fff;
+      border: none; padding: 8px 12px; border-radius: 6px;
+      font-size: 16px; cursor: pointer; z-index: 1;
+    `;
+
+        // iframe (자동재생 포함)
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%';
+        iframe.height = '100%';
+        iframe.src = embedUrl + (embedUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+        iframe.frameBorder = '0';
+        iframe.allow =
+            'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+
+        box.appendChild(closeBtn);
+        box.appendChild(iframe);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        // 바닥 스크롤 잠금
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeVideo() {
+        // 새 오버레이(내가 준 showVideo)와, 예전 방식 모달 둘 다 제거
+        ['videoOverlay', 'videoModal', 'videoModal2'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        });
+        // 바닥 스크롤 잠금 해제
+        document.body.style.overflow = '';
+    }
+
+    function closePipImage() {
+        const pipBox = document.getElementById('pipImageBox');
+        if (pipBox) {
+            pipBox.style.display = 'none';
+        }
+    }
+
+
+</script>
+
+<body>
+    <header class="p-3 text-bg-dark">
+        <div class="container">
+            <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+                <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+                    <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap">
+                        <use xlink:href="#bootstrap"></use>
+                    </svg>
+                </a>
+
+                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                    <li><a href="#" class="nav-link px-2 text-danger">Mystery Lab</a></li>
+                    <li><a href="#" class="nav-link px-2 text-white">Season 1. 코나중 미스터리 </a></li>
+                    <div class="nav-link px-2 text-white">남은 생명</div>
+                    <div class="lives" id="lives"></div>
+                    <div class="nav-link px-2 text-white">치료제</div>
+                    <div class="medicine-container" id="medicine-container"></div>
+                </ul>
+
+                <audio src="bgm.weba" autoplay controls></audio>
+
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="section">
+            <h3>로그인 정보</h3>
+            <p>학교명: <span id="schoolName"></span></p>
+            <p>학번: <span id="studentID"></span></p>
+            <p>이름: <span id="studentName"></span></p>
+        </div>
+    </div>
+
+    <div class="image"></div>
+
+
+
+    <div class="main">
+        <div class="p-5 mb-4 bg-body-tertiary rounded-3">
+            <div class="container-fluid py-5">
+                <h1 class="display-5 fw-bold">코나중 미스터리</h1>
+                <p class="col-md-8 fs-4">일단 연구소에서 지시한 대로 코나중학교에 도착했다. 다행히 밖으로 나온 좀비는 없는 것 같다. 다만 간헐적으로 들리는 짐승의 울음소리 같은
+                    것들이 저 안에서 무슨 일이 일어나고 있는지 짐작하게 해 줄 뿐이다. 연구소로 왔던 신호 내용을 보면, 시간이 여유롭지 않을 것 같다.
+                    빨리 학교 안으로 들어가 저 안에서 일어나고 있는 일을 파악하고 이를 해결해야 한다. 그러기 위해서는 과학 선생님이 어디 있는지를 알아야 하는데,
+                    한 눈에 단서를 알 수 있도록 했다고 하니 우선 건물을 살펴 보자. 그런데, 저게 뭐지? </p>
+                <p>(학교입구 카드를 뒤집으세요.)</p>
+                <button onclick="openclose('play')" type="button" class="btn btn-outline-light">플레이</button>
+                <button onclick="openclose('hint')" type="button" class="btn btn-outline-light">힌트</button>
+                <button onclick="toggleItemBox()" type="button" class="btn btn-outline-warning ms-2">아이템</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="itemBox" style="display: none; margin: 20px auto; max-width: 300px;">
+        <div class="row row-cols-3 g-2">
+            <!-- 3x3 박스 -->
+            <div class="col">
+                <div class="item-cell border bg-light" id="item-0-0" style="height: 80px;"></div>
+            </div>
+            <div class="col">
+                <div class="item-cell border bg-light" id="item-0-1" style="height: 80px;"></div>
+            </div>
+            <div class="col">
+                <div class="item-cell border bg-light" id="item-0-2" style="height: 80px;"></div>
+            </div>
+
+            <div class="col">
+                <div class="item-cell border bg-light" id="item-1-0" style="height: 80px;"></div>
+            </div>
+            <div class="col">
+                <div class="item-cell border bg-light" id="item-1-1" style="height: 80px;"></div>
+            </div>
+            <div class="col">
+                <div class="item-cell border bg-light" id="item-1-2" style="height: 80px;"></div>
+            </div>
+
+            <div class="col">
+                <div class="item-cell border bg-light" id="item-2-0" style="height: 80px;"></div>
+            </div>
+            <div class="col">
+                <div class="item-cell border bg-light" id="item-2-1" style="height: 80px;"></div>
+            </div>
+            <div class="col">
+                <div class="item-cell border bg-light" id="item-2-2" style="height: 80px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="play" id="play">
+        <h3> 플레이칸</h3>
+        <h4> 알파벳을 입력하세요. (대소문자 구분) </h4>
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" id="play_input" placeholder="플레이칸">
+            <label for="floatingInput">알파벳을 입력하세요. (대소문자 구분) </label>
+        </div>
+        <button onclick="displayPlay()" type="button" class="btn btn-outline-light">확인</button>
+        <p></p>
+        <div id="play_output"></div>
+    </div>
+
+    <div class="hint" id="hint">
+        <h3> 힌트</h3>
+        <h4> 알파벳을 입력하세요. </h4>
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" id="hint_input" placeholder="힌트칸">
+            <label for="floatingInput">알파벳을 입력하세요. </label>
+        </div>
+        <button onclick="displayHint()" type="button" class="btn btn-outline-light">확인</button>
+        <div id="hint_output"></div>
+    </div>
+
+    <!-- 치료제 모달 -->
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infoModalLabel">치료제 완성</h5>
+                </div>
+                <div class="modal-body">
+                    치료제 3개를 다 모았습니다. <br>
+                    이제 복도로 나가서 좀비를 물리칠 수 있습니다. <br>
+                    5명의 좀비를 물리치면 좀순이가 있는 교실까지 갈 수 있습니다. <br>
+                    복도로 나가시겠습니까?<br>
+                    * 진행하기 전에, Sc(21), Ti(22), V(23) 3개의 카드를 모두 뒤집었는지 확인하세요. <br>
+                    * 위 3개의 카드를 제외한 모든 카드(공간카드, 플레이카드)를 모두 버리세요.
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmButton" class="btn btn-outline-success">확인</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 좀비 모달 -->
+    <div class="modal fade" id="zombieModal" tabindex="-1" aria-labelledby="zombieModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="zombieModalLabel"></h5>
+                </div>
+                <div class="modal-body">
+                    <!-- 내용은 JavaScript에서 동적으로 추가됩니다. -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        let currentRecordIndex = 1;
+
+        function nextRecordImage() {
+            currentRecordIndex++;
+            if (currentRecordIndex > 3) currentRecordIndex = 1; // 2장까지만 순환
+            document.getElementById('record-image').src = `좀비관찰기록${currentRecordIndex}.png`;
+        }
+    </script>
+
+    <div id="pipImageBox" style="
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80vw;
+    height: 80vh;
+    background: white;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    z-index: 9999;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* ← 텍스트 수직 가운데 정렬 */
+    overflow: hidden;
+
+">
+        <button onclick="closePipImage()" style="
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: red;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        font-weight: bold;
+        font-size: 18px;
+        cursor: pointer;
+    ">✖</button>
+        <!-- 🔔 안내 문구 -->
+        <div style="
+        font-size: 1rem;
+        font-weight: bold;
+        color: #333;
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        padding: 0 20px;
+        line-height: 1.5;
+    ">
+            <br>아이템 창 버튼이 활성화되었습니다.
+            플레이 중 출력되는 영상과 이미지들은
+            아이템창을 눌러서 다시 확인할 수 있습니다.
+        </div>
+
+        <!-- 이미지 영역 -->
+        <img src="아이템창.png" alt="PIP 이미지" style="
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 5px;
+    ">
+    </div>
+
+
+
+</body>
+
+</html>

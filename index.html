@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Gowun Dodum', sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .form-control {
+            background-color: transparent;
+            color: white;
+            border-color: white;
+        }
+
+        .form-control:focus {
+            background-color: black;
+            color: white;
+            box-shadow: none;
+            border-color: yellow;
+        }
+
+        .btn-custom {
+            background-color: red;
+            border: none;
+        }
+
+        .btn-custom:hover {
+            background-color: darkred;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+
+    <script type="module">
+        // Firebase SDK 라이브러리 가져오기
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyByT-lTQo3y1oRgzICAv0CCGio3uSsSq34",
+            authDomain: "zombie1-50e08.firebaseapp.com",
+            projectId: "zombie1-50e08",
+            storageBucket: "zombie1-50e08.appspot.com",
+            messagingSenderId: "73303480966",
+            appId: "1:73303480966:web:16b0bbd4e6381272004f07",
+            measurementId: "G-Y798KZ774D"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // 새로하기 버튼 클릭 시 입력 폼 나타내기
+            document.getElementById("newGameBtn").addEventListener("click", function () {
+                document.getElementById("newGameForm").classList.remove("hidden");
+                document.getElementById("existingGameForm").classList.add("hidden");
+            });
+
+            // 이어하기 버튼 클릭 시 검색 폼 나타내기
+            document.getElementById("continueGameBtn").addEventListener("click", function () {
+                document.getElementById("existingGameForm").classList.remove("hidden");
+                document.getElementById("newGameForm").classList.add("hidden");
+            });
+
+            // 새로하기 - 데이터 저장 처리
+            document.getElementById("userbtn").addEventListener("click", async function () {
+                let schoolName = document.getElementById("schoolName").value;
+                let studentID = document.getElementById("studentID").value;
+                let name = document.getElementById("name").value;
+
+                if (schoolName && studentID && name) {
+                    // Firestore에 데이터 저장
+                    try {
+                        await addDoc(collection(db, "user"), {
+                            schoolName: schoolName,
+                            studentID: studentID,
+                            name: name
+                        });
+
+                        const q = query(collection(db, "user"),
+                            where("schoolName", "==", schoolName),
+                            where("studentID", "==", studentID),
+                            where("name", "==", name));
+
+                        const querySnapshot = await getDocs(q);
+                        if (!querySnapshot.empty) {
+                            querySnapshot.forEach((doc) => {
+                                let userData = doc.data();
+                                alert(`저장 성공: 학교명 ${userData.schoolName}, 학번 ${userData.studentID}, 이름 ${userData.name}`);
+                                localStorage.setItem('a', userData.schoolName);
+                                localStorage.setItem('b', userData.studentID);
+                                localStorage.setItem('c', userData.name);
+                                window.location.href = 'page0.html';
+                            });
+                        } else {
+                            alert('검색 결과가 없습니다.');
+                        }
+
+                    } catch (error) {
+                        console.error("Error adding document: ", error);
+                        alert("데이터 저장 중 오류가 발생했습니다.");
+                    }
+                } else {
+                    alert("모든 필드를 입력해 주세요.");
+                }
+            });
+
+            // 이어하기 검색 처리
+            document.getElementById("searchbtn").addEventListener("click", async function () {
+                let schoolName = document.getElementById("schoolNameSearch").value;
+                let studentID = document.getElementById("studentIDSearch").value;
+                let name = document.getElementById("nameSearch").value;
+
+                if (schoolName && studentID && name) {
+                    // Firestore에서 검색 조건에 맞는 문서 가져오기
+                    const q = query(collection(db, "user"),
+                        where("schoolName", "==", schoolName),
+                        where("studentID", "==", studentID),
+                        where("name", "==", name));
+
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) {
+                        querySnapshot.forEach((doc) => {
+                            let userData = doc.data();
+                            alert(`검색 성공: 학교명 ${userData.schoolName}, 학번 ${userData.studentID}, 이름 ${userData.name}`);
+                            localStorage.setItem('a', userData.schoolName);
+                            localStorage.setItem('b', userData.studentID);
+                            localStorage.setItem('c', userData.name);
+                            window.location.href = 'page0.html';
+                        });
+                    } else {
+                        alert('검색 결과가 없습니다.');
+                    }
+                } else {
+                    alert("모든 필드를 입력해 주세요.");
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 첫 화면에서 보이는 버튼 -->
+        <h1 class="display-5 mb-4">게임 시작</h1>
+        <button id="newGameBtn" type="button" class="btn btn-custom mb-3">새로하기</button>
+        <button id="continueGameBtn" type="button" class="btn btn-custom mb-3">이어하기</button>
+
+        <!-- 새로하기 폼 -->
+        <div id="newGameForm" class="hidden">
+            <h2 class="display-6 mb-4">새 게임 시작</h2>
+            <form>
+                <div class="mb-3">
+                    <label for="schoolName" class="form-label">학교 이름</label>
+                    <input type="text" class="form-control" id="schoolName" placeholder="학교 이름을 입력하세요">
+                </div>
+                <div class="mb-3">
+                    <label for="studentID" class="form-label">학번</label>
+                    <input type="text" class="form-control" id="studentID" placeholder="학번을 입력하세요">
+                </div>
+                <div class="mb-3">
+                    <label for="name" class="form-label">이름</label>
+                    <input type="text" class="form-control" id="name" placeholder="이름을 입력하세요">
+                </div>
+                <button id="userbtn" type="button" class="btn btn-custom mt-3">확인</button>
+            </form>
+        </div>
+
+        <!-- 이어하기 폼 -->
+        <div id="existingGameForm" class="hidden">
+            <h2 class="display-6 mb-4">게임 이어하기</h2>
+            <form>
+                <div class="mb-3">
+                    <label for="schoolNameSearch" class="form-label">학교 이름</label>
+                    <input type="text" class="form-control" id="schoolNameSearch" placeholder="학교 이름을 입력하세요">
+                </div>
+                <div class="mb-3">
+                    <label for="studentIDSearch" class="form-label">학번</label>
+                    <input type="text" class="form-control" id="studentIDSearch" placeholder="학번을 입력하세요">
+                </div>
+                <div class="mb-3">
+                    <label for="nameSearch" class="form-label">이름</label>
+                    <input type="text" class="form-control" id="nameSearch" placeholder="이름을 입력하세요">
+                </div>
+                <button id="searchbtn" type="button" class="btn btn-custom mt-3">검색하기</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
